@@ -1,0 +1,14 @@
+nav#TableOfContents {
+  background-color: #edf2f7;
+  border: none;
+  border-radius: 5px;
+  display: block;
+  margin: 5px;
+  padding: 10px;
+  width: 70%;
+  overflow-wrap: break-word;
+}
+
+nav#TableOfContents ul {
+  display: block;
+}
