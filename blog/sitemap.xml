@@ -3,43 +3,38 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
-    <loc>http://aminevsky.github.io/blog/</loc>
-    <lastmod>2020-10-29T19:20:37+09:00</lastmod>
+    <loc>https://aminevsky.github.io/blog/</loc>
+    <lastmod>2020-10-31T16:58:52+09:00</lastmod>
   </url>
   
   <url>
-    <loc>http://aminevsky.github.io/blog/categories/</loc>
-    <lastmod>2020-10-29T19:20:37+09:00</lastmod>
+    <loc>https://aminevsky.github.io/blog/categories/</loc>
+    <lastmod>2020-10-31T16:58:52+09:00</lastmod>
   </url>
   
   <url>
-    <loc>http://aminevsky.github.io/blog/tags/example/</loc>
-    <lastmod>2020-10-29T19:20:37+09:00</lastmod>
+    <loc>https://aminevsky.github.io/blog/tags/hugo/</loc>
+    <lastmod>2020-10-31T16:58:52+09:00</lastmod>
   </url>
   
   <url>
-    <loc>http://aminevsky.github.io/blog/posts/</loc>
-    <lastmod>2020-10-29T19:20:37+09:00</lastmod>
+    <loc>https://aminevsky.github.io/blog/posts/hugo-started/</loc>
+    <lastmod>2020-10-31T16:58:52+09:00</lastmod>
   </url>
   
   <url>
-    <loc>http://aminevsky.github.io/blog/tags/</loc>
-    <lastmod>2020-10-29T19:20:37+09:00</lastmod>
+    <loc>https://aminevsky.github.io/blog/posts/</loc>
+    <lastmod>2020-10-31T16:58:52+09:00</lastmod>
   </url>
   
   <url>
-    <loc>http://aminevsky.github.io/blog/tags/test/</loc>
-    <lastmod>2020-10-29T19:20:37+09:00</lastmod>
+    <loc>https://aminevsky.github.io/blog/tags/</loc>
+    <lastmod>2020-10-31T16:58:52+09:00</lastmod>
   </url>
   
   <url>
-    <loc>http://aminevsky.github.io/blog/categories/test/</loc>
-    <lastmod>2020-10-29T19:20:37+09:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>http://aminevsky.github.io/blog/posts/example1/</loc>
-    <lastmod>2020-10-29T19:20:37+09:00</lastmod>
+    <loc>https://aminevsky.github.io/blog/categories/%E3%83%96%E3%83%AD%E3%82%B0/</loc>
+    <lastmod>2020-10-31T16:58:52+09:00</lastmod>
   </url>
   
 </urlset>
