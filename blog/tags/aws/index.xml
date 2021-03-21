@@ -1,14 +1,14 @@
 
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
  <channel>
-   <title>Categories on aminevsky.blog</title>
-   <link>https://aminevsky.github.io/blog/categories/</link>
-   <description>Recent content in Categories on aminevsky.blog</description>
+   <title>AWS on aminevsky.blog</title>
+   <link>https://aminevsky.github.io/blog/tags/aws/</link>
+   <description>Recent content in AWS on aminevsky.blog</description>
    <generator>Hugo -- gohugo.io</generator>
    <language>ja-jp</language>
    <lastBuildDate>Sun, 21 Mar 2021 18:30:30 +0900</lastBuildDate>
    
-       <atom:link href="https://aminevsky.github.io/blog/categories/index.xml" rel="self" type="application/rss+xml" />
+       <atom:link href="https://aminevsky.github.io/blog/tags/aws/index.xml" rel="self" type="application/rss+xml" />
    
    
      <item>
