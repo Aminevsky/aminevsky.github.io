@@ -6,10 +6,80 @@
    <description>Recent content in AWS on aminevsky.blog</description>
    <generator>Hugo -- gohugo.io</generator>
    <language>ja-jp</language>
-   <lastBuildDate>Sun, 21 Mar 2021 18:30:30 +0900</lastBuildDate>
+   <lastBuildDate>Sat, 22 May 2021 20:46:28 +0900</lastBuildDate>
    
        <atom:link href="https://aminevsky.github.io/blog/tags/aws/index.xml" rel="self" type="application/rss+xml" />
    
+   
+     <item>
+       <title>20210522</title>
+       <link>https://aminevsky.github.io/blog/posts/20210522/</link>
+       <pubDate>Sat, 22 May 2021 20:46:28 +0900</pubDate>
+       
+       <guid>https://aminevsky.github.io/blog/posts/20210522/</guid>
+       <description>&lt;p&gt;このぐらいのラフさじゃないと、続かない気がしてきたので&amp;hellip;&lt;/p&gt;
+&lt;h1 id=&#34;その他-intellij-のターミナルで-git-が文字化けする&#34;&gt;[その他] IntelliJ のターミナルで git が文字化けする&lt;/h1&gt;
+&lt;p&gt;エラーメッセージをドイツ語で表示されても分からん。&lt;sup id=&#34;fnref:1&#34;&gt;&lt;a href=&#34;#fn:1&#34; class=&#34;footnote-ref&#34; role=&#34;doc-noteref&#34;&gt;1&lt;/a&gt;&lt;/sup&gt;&lt;/p&gt;
+&lt;p&gt;調べたら、環境変数に &lt;code&gt;LANG=en_US.UTF-8&lt;/code&gt; を追加すればよさそう。IntelliJ の設定で &lt;code&gt;Tools &amp;gt; Terminal &amp;gt; Environment variables&lt;/code&gt; と辿って追加する。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://apple.stackexchange.com/questions/337244/homebrew-and-git-wrong-language-on-the-command-line&#34;&gt;Homebrew and Git - Wrong language on the command line&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;なんでも macOS に複数言語を追加している場合に発生するらしい。たしかにドイツ語も追加してあったな&amp;hellip;&lt;/p&gt;
+&lt;p&gt;ちなみに。上記掲示板には「他の言語を削除すればよい」とあるが、それはさすがに乱暴なアドバイスじゃあるまいか？&lt;/p&gt;
+&lt;h1 id=&#34;aws-cdk-で-api-gateway-に-waf-を設定する&#34;&gt;[AWS] CDK で API Gateway に WAF を設定する&lt;/h1&gt;
+&lt;p&gt;という要件があったので、やり方を調べた。WAF はすでに別で構築されていて、CDK で作った API Gateway に関連付けたい。&lt;/p&gt;
+&lt;p&gt;AWS マネジメントコンソールでは、API Gateway からも WAF の WebACL を選べるので、てっきり CDK でも API Gateway のメソッドにあるのかな？と思ったら、見当たらなかった。&lt;/p&gt;
+&lt;p&gt;検索してみると、 &lt;code&gt;@aws-cdk/aws-wafv2&lt;/code&gt; の &lt;a href=&#34;https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_aws-wafv2.CfnWebACLAssociation.html&#34;&gt;CfnWebACLAssociation&lt;/a&gt; を使うらしい。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://dev.classmethod.jp/articles/aws-cdk-wafv2-block-ip-example/&#34;&gt;AWS CDKでWAFv2を構築しIPアドレス制限を試してみた | DevelopersIO&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/aws/aws-cdk/issues/3582&#34;&gt;Support WebAclArn for an API Gateway stage&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;こんな感じ。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-typescript&#34; data-lang=&#34;typescript&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;api&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;apigateway&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;RestApi&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;this&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;ExampleApi&amp;#39;&lt;/span&gt;);
+
+&lt;span style=&#34;color:#75715e&#34;&gt;// リソースやらメソッドの追加がありまして...
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;restApiArn&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;`arn:aws:apigateway:ap-northeast-1::/restapis/&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;${&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;api&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;restApiId&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;}&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;/stages/prod`&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;webAclArn&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;arn:aws:wafv2:ap-northeast-1:xxxxxxxxxxxx:regional/webacl/apigw-web-acl/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx&amp;#39;&lt;/span&gt;;
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;wafv2&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;CfnWebACLAssociation&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;this&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;judge-api-waf&amp;#39;&lt;/span&gt;, {
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;resourceArn&lt;/span&gt;: &lt;span style=&#34;color:#66d9ef&#34;&gt;restApiArn&lt;/span&gt;,
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;webAclArn&lt;/span&gt;,
+});
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h1 id=&#34;その他-メモリが足りない&#34;&gt;[その他] メモリが足りない&lt;/h1&gt;
+&lt;p&gt;仕事で使っている MacBook Pro （メモリ 16 GB）が、1 ヶ月間に 2 回もカーネルパニックで死んだ。それから「アクティビティモニタ」をこまめに見るようにしたところ、常時、メモリを 13 GB 消費していることが分かった。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Google Chrome x 20 タブ&lt;/li&gt;
+&lt;li&gt;VSCode x 2 ウィンドウ&lt;/li&gt;
+&lt;li&gt;Atom x 5 タブ&lt;/li&gt;
+&lt;li&gt;Slack&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;一番メモリを消費しているのは Chrome だが、Chrome を閉じても 7GB くらいにしか下がらない。&lt;/p&gt;
+&lt;p&gt;と思ったら、プライベートで使っている MacBook Air （メモリ 8 GB）も、常時、メモリを 7GB 消費指定していた。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Firefox x 30 タブ&lt;/li&gt;
+&lt;li&gt;IntelliJ x 2 ウィンドウ&lt;/li&gt;
+&lt;li&gt;Atom x 4 タブ&lt;/li&gt;
+&lt;li&gt;TweetDeck&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;この状態で Docker を起動すると、確実にファンが回る。Docker を起動しながら、ちょっと息抜きに YouTube 見ようとか、そういう優雅な生活はできない。&lt;/p&gt;
+&lt;p&gt;とりあえず言いたいのは &lt;strong&gt;M1 Mac 欲しいなあ&lt;/strong&gt; ということで。17 万円ぐらい出せば、メモリ 16 GB の MacBook Pro が買えるんですね。わかってはいる。ただ、おカネが無くてな。&lt;sup id=&#34;fnref:2&#34;&gt;&lt;a href=&#34;#fn:2&#34; class=&#34;footnote-ref&#34; role=&#34;doc-noteref&#34;&gt;2&lt;/a&gt;&lt;/sup&gt; 会社の業績も赤字続きで、ボーナスは期待できないし。今年は特別定額給付金も無いし。&lt;sup id=&#34;fnref:3&#34;&gt;&lt;a href=&#34;#fn:3&#34; class=&#34;footnote-ref&#34; role=&#34;doc-noteref&#34;&gt;3&lt;/a&gt;&lt;/sup&gt;&lt;/p&gt;
+&lt;section class=&#34;footnotes&#34; role=&#34;doc-endnotes&#34;&gt;
+&lt;hr&gt;
+&lt;ol&gt;
+&lt;li id=&#34;fn:1&#34; role=&#34;doc-endnote&#34;&gt;
+&lt;p&gt;第二外国語でドイツ語を選択したけど、文法は分かっても、単語を全く覚えなかったので、全く役に立たない &lt;a href=&#34;#fnref:1&#34; class=&#34;footnote-backref&#34; role=&#34;doc-backlink&#34;&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li id=&#34;fn:2&#34; role=&#34;doc-endnote&#34;&gt;
+&lt;p&gt;配信ライブはありがたいんだけれど、気づいたことがある。今までもたくさんライブに申し込んでいたけれど、当選確率が低かったので、実際に参戦することは少なかった。ところが、配信ライブに「外れ」という概念は存在しないので、申し込んだら申し込んだ分だけおカネが飛んでいく。つまり、これまでは「神の見えざる手」によって支出が絶妙に調整されていたのに、今は意識しないと無尽蔵に使ってしまう。これは配信ライブ特有の落とし穴ではあるまいか。 &lt;a href=&#34;#fnref:2&#34; class=&#34;footnote-backref&#34; role=&#34;doc-backlink&#34;&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li id=&#34;fn:3&#34; role=&#34;doc-endnote&#34;&gt;
+&lt;p&gt;とはいえ、仮に特別定額給付金があったとしても、街中歩けば「閉店」「休業」だらけで、そういう人たちにこそ、おカネを回してくれという感じではある。回しているのかもしれんが、本当に足りているんだろうか？ &lt;a href=&#34;#fnref:3&#34; class=&#34;footnote-backref&#34; role=&#34;doc-backlink&#34;&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/section&gt;
+</description>
+     </item>
    
      <item>
        <title>AWS SDK for JavaScript v3 で S3 からオブジェクトを取得するには</title>
