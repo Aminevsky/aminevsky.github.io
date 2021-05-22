@@ -175,7 +175,7 @@
 <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">restApiArn</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">`arn:aws:apigateway:ap-northeast-1::/restapis/</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">api</span>.<span style="color:#a6e22e">restApiId</span><span style="color:#e6db74">}</span><span style="color:#e6db74">/stages/prod`</span>;
 <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">webAclArn</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;arn:aws:wafv2:ap-northeast-1:xxxxxxxxxxxx:regional/webacl/apigw-web-acl/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx&#39;</span>;
 
-<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">wafv2</span>.<span style="color:#a6e22e">CfnWebACLAssociation</span>(<span style="color:#66d9ef">this</span>, <span style="color:#e6db74">&#39;judge-api-waf&#39;</span>, {
+<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">wafv2</span>.<span style="color:#a6e22e">CfnWebACLAssociation</span>(<span style="color:#66d9ef">this</span>, <span style="color:#e6db74">&#39;api-waf&#39;</span>, {
   <span style="color:#a6e22e">resourceArn</span>: <span style="color:#66d9ef">restApiArn</span>,
   <span style="color:#a6e22e">webAclArn</span>,
 });
