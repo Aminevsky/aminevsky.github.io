@@ -55,7 +55,7 @@
 &lt;li&gt;Slack&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;一番メモリを消費しているのは Chrome だが、Chrome を閉じても 7GB くらいにしか下がらない。&lt;/p&gt;
-&lt;p&gt;と思ったら、プライベートで使っている MacBook Air （メモリ 8 GB）も、常時、メモリを 7GB 消費指定していた。&lt;/p&gt;
+&lt;p&gt;と思ったら、プライベートで使っている MacBook Air （メモリ 8 GB）も、常時、メモリを 7GB 消費していた。&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;Firefox x 30 タブ&lt;/li&gt;
 &lt;li&gt;IntelliJ x 2 ウィンドウ&lt;/li&gt;
