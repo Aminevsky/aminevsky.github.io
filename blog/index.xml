@@ -6,10 +6,165 @@
    <description>Recent content on aminevsky.blog</description>
    <generator>Hugo -- gohugo.io</generator>
    <language>ja-jp</language>
-   <lastBuildDate>Sat, 22 May 2021 20:46:28 +0900</lastBuildDate>
+   <lastBuildDate>Sat, 05 Jun 2021 18:15:00 +0900</lastBuildDate>
    
        <atom:link href="https://aminevsky.github.io/blog/index.xml" rel="self" type="application/rss+xml" />
    
+   
+     <item>
+       <title>20210605</title>
+       <link>https://aminevsky.github.io/blog/posts/20210605/</link>
+       <pubDate>Sat, 05 Jun 2021 18:15:00 +0900</pubDate>
+       
+       <guid>https://aminevsky.github.io/blog/posts/20210605/</guid>
+       <description>&lt;p&gt;約 2 週間分、溜まってしまった。&lt;/p&gt;
+&lt;h1 id=&#34;その他-左に曲がりますご注意ください&#34;&gt;[その他] 「左に曲がります、ご注意ください」&lt;/h1&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://trafficnews.jp/post/80883&#34;&gt;「バックします、ご注意ください」は騒音なのか　はたらくクルマの音声、あまり聞かなくなった？ | 乗りものニュース&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;夏になって窓を開ける機会が増えたから、気になることが増えた。&lt;/p&gt;
+&lt;p&gt;ドライバーからしたら、左折やバックは死角で気づきにくいから周囲に注意を促したいという気持ちは分かる。だから、「騒音」とまで言うつもりはないけれど、文章を読み上げる必要があるんだろうか？とは思う。文章を読み上げられると、「何を言っているんだろう？」と気になってしまう（それを「騒音」と捉える人もいるんだろう）。&lt;/p&gt;
+&lt;p&gt;それとも、ピロンピロンと音を鳴らすよりも、文章を読み上げたほうが事故防止に効果的なんだろうか？ そういう科学的根拠があるんだろうか？&lt;sup id=&#34;fnref:1&#34;&gt;&lt;a href=&#34;#fn:1&#34; class=&#34;footnote-ref&#34; role=&#34;doc-noteref&#34;&gt;1&lt;/a&gt;&lt;/sup&gt;&lt;/p&gt;
+&lt;p&gt;と思ったけど、たぶんそもそも実験なんかしてなくて、ただ単に「文章を読み上げたほうが丁寧だ」という発想でやっているんだろうなあ。日本人はとにかく機械に文章を読み上げさせるのが好きだから。風呂の湯が沸いたときに「沸きました」と、一々、言わせるぐらいなんだから。&lt;/p&gt;
+&lt;h1 id=&#34;aws-cognito-の公開鍵&#34;&gt;[AWS] Cognito の公開鍵&lt;/h1&gt;
+&lt;p&gt;AWS Cognito のユーザープールは、秘密鍵で署名して JWT （JSON Web Token）を発行する。トークンを受け取った側は、AWS がユーザープールごとに公開している公開鍵を使って検証する。&lt;/p&gt;
+&lt;p&gt;公開鍵は、以下の URL からダウンロードできる（&lt;a href=&#34;https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-using-tokens-verifying-a-jwt.html&#34;&gt;ドキュメント&lt;/a&gt;）。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;https://cognito-idp.{region}.amazonaws.com/{userPoolId}/.well-known/jwks.json
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;問題は、これを毎回ダウンロードするべきかどうか。いろいろな実装例を見ても、処理のたびに都度ダウンロードしているものもあれば、一度ダウンロードして使いまわしているものもある。どちらが正解なのか？&lt;/p&gt;
+&lt;p&gt;公開鍵が不変ならば後者でいいかなと思っていたけど、AWS 的には「将来ローテートするように変更するかもしれない」という立場らしい。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://forums.aws.amazon.com/thread.jspa?threadID=241570&#34;&gt;AWS Developer Forums: JWT signing key rotation &amp;hellip;&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Cognito UserPool currently does not rotate keys but this behavior can be changed in future. For example, we may periodically rotate keys or allow a developer to replace the keys. We recommend that you cache each key in jwks uri against kid. Now when you process Id or Access token in your APIs, you should check the kid in JWT header and retrieve the key from cache. When your API sees token with different kid, you should query jwks uri again to check if keys have been changed and update your cache accordingly with new keys.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;回答から 5 年経って、いまだにローテート機能が実装されていないんだから、もう実装されることないんじゃないかとも思うけど。&lt;/p&gt;
+&lt;h1 id=&#34;aws-aws-sdk-for-javascript-v3-のビルドでエラー&#34;&gt;[AWS] AWS SDK for JavaScript v3 のビルドでエラー&lt;/h1&gt;
+&lt;p&gt;AWS SDK for JavaScript v3 を使っているソースコードをビルドしたら、以下のエラーが出た。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;node_modules/@aws-sdk/types/dist/cjs/util.d.ts:92:42 - error TS1005: &#39;,&#39; expected.
+
+92 export declare type UserAgentPair = [name: string, version?: string];
+                                            ~
+node_modules/@aws-sdk/types/dist/cjs/util.d.ts:92:60 - error TS1005: &#39;,&#39; expected.
+
+92 export declare type UserAgentPair = [name: string, version?: string];
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Issues があった。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/aws/aws-sdk-js-v3/issues/1842&#34;&gt;Error Module has no exported member &amp;lsquo;UserAgent&amp;rsquo; while using aws-sdk-js-v3 · Issue #1842&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;TypeScript のバージョンが 4 以降でないとダメらしい。&lt;/p&gt;
+&lt;p&gt;AWS CDK も使っているソースコードだったけど、CDK でデフォルトで入ってくるのが 3.9.7 だったからエラーになっていたみたい。&lt;/p&gt;
+&lt;h1 id=&#34;aws-aws-sdk-for-javascript-v3-でクレデンシャルを指定するには&#34;&gt;[AWS] AWS SDK for JavaScript v3 でクレデンシャルを指定するには&lt;/h1&gt;
+&lt;p&gt;検索しても v2 の情報ばかりヒットしてしまうので、メモしておく。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/loading-node-credentials-shared.html&#34;&gt;Loading credentials in Node.js from the shared credentials file - AWS SDK for JavaScript&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-typescript&#34; data-lang=&#34;typescript&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; {&lt;span style=&#34;color:#a6e22e&#34;&gt;fromIni&lt;/span&gt;} &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;require&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;@aws-sdk/credential-provider-ini&amp;#34;&lt;/span&gt;);
+&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;s3Client&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;S3&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;S3Client&lt;/span&gt;({
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;credentials&lt;/span&gt;: &lt;span style=&#34;color:#66d9ef&#34;&gt;fromIni&lt;/span&gt;({&lt;span style=&#34;color:#a6e22e&#34;&gt;profile&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;work-account&amp;#39;&lt;/span&gt;})
+});
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h1 id=&#34;typescript-型の拡大&#34;&gt;[TypeScript] 型の拡大&lt;/h1&gt;
+&lt;p&gt;AWS SDK for JavaScript v3 で、Cognito の &lt;a href=&#34;https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/clients/client-cognito-identity-provider/classes/adminlistgroupsforusercommand.html&#34;&gt;AdminListGroupsForUserCommand&lt;/a&gt; を使おうとしたら、 TypeScript でエラーになった。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;TS7022: &#39;NextToken&#39; implicitly has type &#39;any&#39; because it does not have a type annotation and is referenced directly or indirectly in its own initializer.
+&lt;/code&gt;&lt;/pre&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-typescript&#34; data-lang=&#34;typescript&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;let&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;nextToken&lt;/span&gt;;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;groups&lt;/span&gt;: &lt;span style=&#34;color:#66d9ef&#34;&gt;string&lt;/span&gt;[] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; [];
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;while&lt;/span&gt; (&lt;span style=&#34;color:#66d9ef&#34;&gt;true&lt;/span&gt;) {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; { &lt;span style=&#34;color:#a6e22e&#34;&gt;Groups&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;NextToken&lt;/span&gt; } &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;await&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;cognitoClient&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;send&lt;/span&gt;(
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;AdminListGroupsForUserCommand&lt;/span&gt;({
+      &lt;span style=&#34;color:#a6e22e&#34;&gt;UserPoolId&lt;/span&gt;: &lt;span style=&#34;color:#66d9ef&#34;&gt;userPoolId&lt;/span&gt;,
+      &lt;span style=&#34;color:#a6e22e&#34;&gt;Username&lt;/span&gt;: &lt;span style=&#34;color:#66d9ef&#34;&gt;email&lt;/span&gt;,
+      &lt;span style=&#34;color:#a6e22e&#34;&gt;NextToken&lt;/span&gt;: &lt;span style=&#34;color:#66d9ef&#34;&gt;nextToken&lt;/span&gt;,
+    }),
+  );
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (&lt;span style=&#34;color:#f92672&#34;&gt;!&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;Groups&lt;/span&gt;) {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;break&lt;/span&gt;;
+  }
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;tmpGroups&lt;/span&gt;: &lt;span style=&#34;color:#66d9ef&#34;&gt;string&lt;/span&gt;[] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; [];
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; (&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Group&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;of&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Groups&lt;/span&gt;) {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (&lt;span style=&#34;color:#f92672&#34;&gt;!&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;Group&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;GroupName&lt;/span&gt;) {
+      &lt;span style=&#34;color:#66d9ef&#34;&gt;continue&lt;/span&gt;;
+    }
+
+    &lt;span style=&#34;color:#a6e22e&#34;&gt;tmpGroups&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;push&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;Group&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;GroupName&lt;/span&gt;);
+  }
+
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;groups&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;push&lt;/span&gt;(...&lt;span style=&#34;color:#a6e22e&#34;&gt;tmpGroups&lt;/span&gt;);
+
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (&lt;span style=&#34;color:#f92672&#34;&gt;!&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;NextToken&lt;/span&gt;) {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;break&lt;/span&gt;;
+  }
+
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;nextToken&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;NextToken&lt;/span&gt;;
+}
+
+&lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;groups&lt;/span&gt;;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;なお、 &lt;code&gt;tsconfig.json&lt;/code&gt; で &lt;code&gt;noImplicitAny&lt;/code&gt; が &lt;code&gt;true&lt;/code&gt; になっている。&lt;/p&gt;
+&lt;p&gt;一番最初の&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-typescript&#34; data-lang=&#34;typescript&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;let&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;nextToken&lt;/span&gt;;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;が &lt;code&gt;any&lt;/code&gt; になっていることが原因だった。なので、&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-typescript&#34; data-lang=&#34;typescript&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;let&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;nextToken&lt;/span&gt;: &lt;span style=&#34;color:#66d9ef&#34;&gt;AdminListGroupsForUserCommandOutput&lt;/span&gt;[&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;NextToken&amp;#39;&lt;/span&gt;];
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;という風にしてあげると、エラーは解消する。&lt;/p&gt;
+&lt;p&gt;これは &lt;a href=&#34;https://amzn.to/2Sfyh3o&#34;&gt;『プログラミング TypeScript』&lt;/a&gt; で &lt;strong&gt;型の拡大&lt;/strong&gt; と呼ばれている挙動らしい。その 126 ページによると、以下のとおり。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;型の拡大（type widening）は、TypeScript の型推論がどのように機能するかを理解するための鍵になるものです。概して、TypeScript は型を推論するときに寛大であり、考えられる最も具体的な型ではなく、より一般的な型を推論する傾向にあります。しかしこれにより、プログラマーの作業はより簡単になり、型チェッカーの不満を抑えるために費やす時間が少なくて済むのです。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;要するに「上手いことやってくれるよ」ということらしい。今回の挙動は 127 ページに書かれている。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;null または undefined に初期化された変数は、any に拡大されます。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-typescript&#34; data-lang=&#34;typescript&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;let&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;a&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;null&lt;/span&gt;        &lt;span style=&#34;color:#75715e&#34;&gt;// any
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;a&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;               &lt;span style=&#34;color:#75715e&#34;&gt;// any
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;a&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;b&amp;#39;&lt;/span&gt;             &lt;span style=&#34;color:#75715e&#34;&gt;// any
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://qiita.com/eyuta/items/31abebb2395c136e0591&#34;&gt;&lt;code&gt;let h = null&lt;/code&gt;について、TypeScript はどのような型を推論するか - Qiita&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h1 id=&#34;javascript-node_envproduction&#34;&gt;[JavaScript] NODE_ENV=production&lt;/h1&gt;
+&lt;p&gt;前も躓いた。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://road288.hatenablog.com/entry/2019/04/11/234618%5D&#34;&gt;NODE_ENV=productionにすると yarn installしたときにdevDependenciesはインストールされなくなる - road288の日記&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h1 id=&#34;ios-サーバにセキュリティ保護された接続を確立できませんでした&#34;&gt;[iOS] 「サーバにセキュリティ保護された接続を確立できませんでした」&lt;/h1&gt;
+&lt;p&gt;iPhone でのみ、以下のエラーが出て、サイトを表示することができないという事象が発生した。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;ページを開けません。Safariはサーバにセキュリティ保護された接続を確立できませんでした。
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;しかし、macOS や Android では事象が発生しない。&lt;/p&gt;
+&lt;p&gt;さらに詳しく調べると、iPhone でも事象が発生するのは iOS 14 だけで、13 では普通に表示できるという。なんかその辺のバージョン差異がヒントになりそうだなと思って検索したら、以下の記事が見つかった。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://qiita.com/qpSHiNqp/items/f4904566cbf5f304d24b&#34;&gt;iOS 14 Safariではホスト名にアンダースコア（_）が含まれるWebページへのHTTPSアクセスが失敗する【一部未検証箇所あり】&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;で、これが大当たり。&lt;/p&gt;
+&lt;p&gt;そもそも RFC 的にはアンダースコアは &lt;strong&gt;使えない&lt;/strong&gt; のが正しいらしい。なんで Apple が iOS 14 で修正して、macOS で修正していないのかは謎だけれど、「RFC 準拠です！」と言われたら従うしかないので。&lt;/p&gt;
+&lt;p&gt;本当は RFC のどこに書いてあるかまで調べるべきなんだろうけど、わりと沼っぽい気がしたので、今回はここまでで。&lt;/p&gt;
+&lt;h1 id=&#34;乃木坂46-鈴木絢音-x-飯間浩明&#34;&gt;[乃木坂46] 鈴木絢音 x 飯間浩明&lt;/h1&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.gentosha.jp/article/18714/&#34;&gt;乃木坂46・鈴木絢音が辞書で最初に調べる言葉は「右」｜光の角度｜飯間浩明／鈴木絢音&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.gentosha.jp/article/18725/&#34;&gt;乃木坂46・鈴木絢音がファンにも伝えたい辞書の魅力｜光の角度｜飯間浩明／鈴木絢音&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;私の推しは辞書好きで有名なのですが、『三省堂国語辞典』の編纂者の1人である飯間先生と対談した記事が出ていた。今月の &lt;a href=&#34;https://amzn.to/3uf5PM9&#34;&gt;小説幻冬&lt;/a&gt; にも掲載されていたけれど、分量が少ないなあと思ったら、未公開分がかなりあったみたい。&lt;/p&gt;
+&lt;p&gt;いろいろ興味深いけれど、飯間先生から見た乃木坂のイメージが興味深い。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;我々の作る『三省堂国語辞典』は、できるだけ現代的にしたいので、「どうだろうなぁ、乃木坂が歌っているとおり、着替える（きがえる）にしようかな」なんて思う。そうやってけっこう、乃木坂46を基準にしてるところがあるんです。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;それって乃木坂というよりは秋元康じゃないかな？とも思ったけれど、ともかく、秋元康は流行語を取り入れるのに柔軟だとは思う。逆に、小室哲哉は、作詞するときに気をつけている点として、こんなことを言っていたらしい。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;流行語を使わない、10〜20年後でも何かに当て嵌めようとすれば誰でも主人公になれるような、あまり時代に寄り添い過ぎない普遍的なワードしか使わない&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;長く残るようなものを作りたい小室哲哉と、時代に身を任せて瞬間的なヒットを狙う秋元康。2 人とも率直にスゴイと思うけれど、人生観としては秋元康のほうがより楽しく生きられるように思うのは私だけだろうか？&lt;sup id=&#34;fnref:2&#34;&gt;&lt;a href=&#34;#fn:2&#34; class=&#34;footnote-ref&#34; role=&#34;doc-noteref&#34;&gt;2&lt;/a&gt;&lt;/sup&gt;&lt;/p&gt;
+&lt;section class=&#34;footnotes&#34; role=&#34;doc-endnotes&#34;&gt;
+&lt;hr&gt;
+&lt;ol&gt;
+&lt;li id=&#34;fn:1&#34; role=&#34;doc-endnote&#34;&gt;
+&lt;p&gt;あまり静かすぎるのも問題で、トヨタのハイブリッド車が静かすぎて危険なので、擬似モーター音を出す装置を付けるようにしたという話が、昔あった。たしかに、ときどき、後ろから、あの擬似モーター音が近づいてきて、ようやく接近に気づくことがある。 &lt;a href=&#34;#fnref:1&#34; class=&#34;footnote-backref&#34; role=&#34;doc-backlink&#34;&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li id=&#34;fn:2&#34; role=&#34;doc-endnote&#34;&gt;
+&lt;p&gt;自分自身に関して言えば、時代に抗おうとするものの、結局何も為すことができずに、ずっと敗北し続けている感はある。昔、親に「お前はまだ何もしていない。努力が足りない」と言われたことがあるけれど、それは「お前は努力すれば出来るはずだ」という過大評価があったからに過ぎない。数年経って分かったのは、結局、私もまた世間一般の人々と同様に、歴史の海の中に埋没していくだけの平凡な才能しか持ち合わせていない平凡な人間であったということである。 &lt;a href=&#34;#fnref:2&#34; class=&#34;footnote-backref&#34; role=&#34;doc-backlink&#34;&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/section&gt;
+</description>
+     </item>
    
      <item>
        <title>20210522</title>
