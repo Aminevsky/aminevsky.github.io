@@ -1,0 +1,348 @@
+<!doctype html>
+
+<html lang="ja-jp">
+
+<head>
+  <title>Cognito の JWT をテストするには - aminevsky.blog</title>
+  <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="description" content="The HTML5 Herald" />
+<meta name="author" content="Aminevsky" /><meta property="og:title" content="Cognito の JWT をテストするには" />
+<meta property="og:description" content="要約 AWS Cognito が提供する jwks.json を模擬的に再現するプログラムを作りました。 GitHub https://github.com/Aminevsky/create-jwks AWS Cognito AWS Cognito にログインすると、3 種類の JWT が返却されます。 アクセストークン ID トー" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://aminevsky.github.io/blog/posts/cognito-jwt-test/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2021-06-13T17:00:00&#43;09:00" />
+<meta property="article:modified_time" content="2021-06-13T17:00:00&#43;09:00" />
+
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Cognito の JWT をテストするには"/>
+<meta name="twitter:description" content="要約 AWS Cognito が提供する jwks.json を模擬的に再現するプログラムを作りました。 GitHub https://github.com/Aminevsky/create-jwks AWS Cognito AWS Cognito にログインすると、3 種類の JWT が返却されます。 アクセストークン ID トー"/>
+
+<meta name="generator" content="Hugo 0.81.0" />
+    
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" integrity="sha256-l85OmPOjvil/SOvVt3HnSSjzF1TUMyT9eV0c2BzEGzU=" crossorigin="anonymous" />
+  <link rel="stylesheet" href="https://aminevsky.github.io/blog/fontawesome/css/all.min.css" />
+  
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto+Slab|Ruda" />
+  
+  
+  <link rel="stylesheet" type="text/css" href="/blog/css/styles.css" /><link rel='stylesheet' href='/blog/css/custom.css'></head>
+
+<body>
+  <div id="container">
+    <header>
+      <h1>
+                <a href="/blog/">aminevsky.blog</a>
+            </h1>
+
+      <ul id="social-media">
+             <li>
+               <a href="https://github.com/Aminevsky" title="GitHub">
+               <i class="fab fa-github fa-lg"></i>
+               </a>
+             </li>
+             <li>
+               <a href="https://twitter.com/Aminevsky" title="Twitter">
+               <i class="fab fa-twitter fa-lg"></i>
+               </a>
+             </li>
+      </ul>
+      
+    </header>
+
+    
+<nav>
+    <ul>
+        
+        <li>
+            <a class="" href="/blog/posts">
+                <i class="fa-li fa  fa-lg"></i><span>Posts</span>
+            </a>
+        </li>
+        
+        <li>
+            <a class="" href="/blog/categories">
+                <i class="fa-li fa  fa-lg"></i><span>Categories</span>
+            </a>
+        </li>
+        
+        <li>
+            <a class="" href="/blog/tags">
+                <i class="fa-li fa  fa-lg"></i><span>Tags</span>
+            </a>
+        </li>
+        
+        <li>
+            <a class="" href="https://aminevsky.github.io">
+                <i class="fa-li fa  fa-lg"></i><span>Home</span>
+            </a>
+        </li>
+        
+    </ul>
+</nav>
+
+
+    <main>
+
+
+
+
+<article>
+
+    <h1>Cognito の JWT をテストするには</h1>
+
+    
+      <aside>
+    <ul>
+        <li>
+            <time class="post-date" datetime="2021-06-13T17:00:00&#43;09:00">Jun 13, 2021</time>
+        </li>
+        
+        <li>
+            Categories:
+            <em>
+                
+                    
+                    <a href="/blog/categories/%E9%96%8B%E7%99%BA">開発</a>
+                
+            </em>
+        </li>
+        
+
+        
+        <li>
+            <em>
+                
+                    
+                    <a href="/blog/tags/aws">#AWS</a>
+                
+                    , 
+                    <a href="/blog/tags/typescript">#TypeScript</a>
+                
+            </em>
+        </li>
+        
+
+        <li>5 minutes read</li>
+    </ul>
+</aside>
+
+    
+
+    
+
+
+    
+      <nav id="TableOfContents">
+  <ul>
+    <li><a href="#要約">要約</a></li>
+    <li><a href="#aws-cognito">AWS Cognito</a>
+      <ul>
+        <li><a href="#公開鍵">公開鍵</a></li>
+        <li><a href="#検証フロー">検証フロー</a></li>
+        <li><a href="#テスト">テスト</a></li>
+      </ul>
+    </li>
+    <li><a href="#プログラム解説">プログラム解説</a>
+      <ul>
+        <li><a href="#概略">概略</a></li>
+        <li><a href="#実装メモ">実装メモ</a></li>
+      </ul>
+    </li>
+    <li><a href="#補足">補足</a></li>
+  </ul>
+</nav>
+    
+
+    <h1 id="要約">要約</h1>
+<p>AWS Cognito が提供する <code>jwks.json</code> を模擬的に再現するプログラムを作りました。</p>
+<ul>
+<li>GitHub
+<ul>
+<li><a href="https://github.com/Aminevsky/create-jwks">https://github.com/Aminevsky/create-jwks</a></li>
+</ul>
+</li>
+</ul>
+<h1 id="aws-cognito">AWS Cognito</h1>
+<p>AWS Cognito にログインすると、3 種類の JWT が返却されます。</p>
+<ul>
+<li>アクセストークン</li>
+<li>ID トークン</li>
+<li>リフレッシュトークン</li>
+</ul>
+<p>ログイン済みかどうかをチェックするためには、まずクライアントから JWT （アクセストークン or ID トークン）を送ってもらいます。例えば、Cookie や Authorization ヘッダーに JWT を入れて送ってもらいます。</p>
+<p>そして、サーバー側では送られてきた JWT が妥当かどうかを検証します。API Gateway ならば <a href="https://dev.classmethod.jp/articles/api-gateway-cognito-authorizer/">Cognito オーソライザー</a> に検証を任せることができますが、<sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup> Lambda@Edge のように自前で検証しなければならない場合も多いでしょう。</p>
+<p>この記事では、後者のように自前で検証しなければならず、それゆえテストも自前で行われなければならない場合を想定しています。</p>
+<h2 id="公開鍵">公開鍵</h2>
+<p>Cognito で発行された JWT の妥当性を検証するためには、まず、AWS から各ユーザープールの公開鍵を取得する必要があります。公開鍵は、以下からダウンロードできます。</p>
+<pre><code>https://cognito-idp.{リージョン}.amazonaws.com/{ユーザープールID}/.well-known/jwks.json
+</code></pre><p>例えば、AWS の <a href="https://aws.amazon.com/jp/premiumsupport/knowledge-center/decode-verify-cognito-json-token/">記事</a> から引用すると、以下のようになります。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json">{
+    <span style="color:#f92672">&#34;keys&#34;</span>: [{
+        <span style="color:#f92672">&#34;alg&#34;</span>: <span style="color:#e6db74">&#34;RS256&#34;</span>,
+        <span style="color:#f92672">&#34;e&#34;</span>: <span style="color:#e6db74">&#34;AQAB&#34;</span>,
+        <span style="color:#f92672">&#34;kid&#34;</span>: <span style="color:#e6db74">&#34;abcdefghijklmnopqrsexample=&#34;</span>,
+        <span style="color:#f92672">&#34;kty&#34;</span>: <span style="color:#e6db74">&#34;RSA&#34;</span>,
+        <span style="color:#f92672">&#34;n&#34;</span>: <span style="color:#e6db74">&#34;lsjhglskjhgslkjgh43lj5h34lkjh34lkjht3example&#34;</span>,
+        <span style="color:#f92672">&#34;use&#34;</span>: <span style="color:#e6db74">&#34;sig&#34;</span>
+    }, {
+        <span style="color:#f92672">&#34;alg&#34;</span>: <span style="color:#e6db74">&#34;RS256&#34;</span>,
+        <span style="color:#f92672">&#34;e&#34;</span>: <span style="color:#e6db74">&#34;AQAB&#34;</span>,
+        <span style="color:#f92672">&#34;kid&#34;</span>: <span style="color:#e6db74">&#34;fgjhlkhjlkhexample=&#34;</span>,
+        <span style="color:#f92672">&#34;kty&#34;</span>: <span style="color:#e6db74">&#34;RSA&#34;</span>,
+        <span style="color:#f92672">&#34;n&#34;</span>: <span style="color:#e6db74">&#34;sgjhlk6jp98ugp98up34hpexample&#34;</span>,
+        <span style="color:#f92672">&#34;use&#34;</span>: <span style="color:#e6db74">&#34;sig&#34;</span>
+    }]
+}
+</code></pre></div><p><code>keys</code> は配列になっていて、要素が 2 つ格納されています。これは、それぞれ「アクセストークン」と「ID トークン」の公開鍵に対応しています。</p>
+<p>送られてくる JWT は「アクセストークン」かもしれないですし、「ID トークン」かもしれません。 <code>jwks.json</code> にある公開鍵のうち、どちらを使うべきかは、JWT のヘッダーにある <code>kid</code> （キー ID）で判断します。 <code>kid</code> が一致すれば、それが使うべき公開鍵ということになります。</p>
+<h2 id="検証フロー">検証フロー</h2>
+<p>以下が、JWT の検証フローです。</p>
+<ul>
+<li><code>jwks.json</code> の中の公開鍵をそれぞれ JWK 形式から PEM 形式へ変換する</li>
+<li>JWT をデコードする</li>
+<li>ペイロードの <code>iss</code> （発行者）が <code>https://cognito-idp.{リージョン}.amazonaws.com/{ユーザープールID}</code> と一致しているかをチェックする</li>
+<li>ペイロードの <code>token_use</code> が、「ID トークン」で認証するならば <code>id</code> に、「アクセストークン」で認証するならば <code>access</code> になっているかをチェックする</li>
+<li>ヘッダーの <code>kid</code> と一致する <code>kid</code> を持つ公開鍵があるかをチェックする</li>
+<li>JWT の署名などを検証する</li>
+</ul>
+<p>詳しくは、<a href="https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-using-tokens-verifying-a-jwt.html">公式ドキュメント</a> や <a href="https://aws.amazon.com/jp/blogs/networking-and-content-delivery/authorizationedge-how-to-use-lambdaedge-and-json-web-tokens-to-enhance-web-application-security/">Lambda@Edge のサンプル</a> を参照してください。</p>
+<p>どの処理もライブラリを呼び出すだけだったり、簡単な条件分岐を書くだけなのですが、いずれにしても自分でコードを書かなければなりません。</p>
+<p>そして、コードを書いたらテストをしなければなりません。</p>
+<h2 id="テスト">テスト</h2>
+<p>テストでは、ペイロードやヘッダーの中身が想定と異なるような JWT を作る必要があります。</p>
+<p>ところで、Cognito が発行する JWT は、秘密鍵を使って署名されています。当然のことながら、この秘密鍵は AWS の奥底に隠されていて、私たちには窺い知ることができません。</p>
+<p>JWT の仕様上、ペイロードやヘッダーの中身を変更したら署名し直さなければなりません。しかし、Cognito の秘密鍵は分かりません。</p>
+<p>そこで、検証フローが正しいかどうかをテストするためには、以下のような作業が必要になります。</p>
+<ul>
+<li>テスト用の秘密鍵と公開鍵を作る</li>
+<li>ペイロードやヘッダーの中身を変える</li>
+<li>テスト用の秘密鍵で署名して JWT を作る</li>
+<li>テスト用の公開鍵で JWT を検証する</li>
+</ul>
+<p>このプログラムでは、上記の作業のうち、テスト用の秘密鍵と公開鍵を作り、Cognito が提供しているような <code>jwks.json</code> も作ります。</p>
+<h1 id="プログラム解説">プログラム解説</h1>
+<h2 id="概略">概略</h2>
+<p><code>yarn run:create</code> を実行すると、 <code>keys</code> ディレクトリの下に、以下のファイルを作ります。</p>
+<ul>
+<li>秘密鍵</li>
+<li>公開鍵（PEM 形式）</li>
+<li><code>jwks.json</code></li>
+</ul>
+<p>なお、秘密鍵と公開鍵を作るときに OpenSSL を呼び出しているので、Windows では動かないかもしれません。</p>
+<p>また、おまけとして、 <code>yarn run:example</code> を実行すると、JWT の作成と検証を行うサンプルも添付しています。</p>
+<h2 id="実装メモ">実装メモ</h2>
+<p>すでに似たようなことをしている人がいました。</p>
+<ul>
+<li><a href="https://qiita.com/shu-yusa/items/36855cf1e9b4ec2adf28">OpenID ConnectのJWTとJWKを手軽につくりたい</a></li>
+</ul>
+<p>上記記事ではシェルスクリプトを書いていますが、Node.js で全て実行するようにしました。</p>
+<p>OpenSSL も Node.js の <a href="https://nodejs.org/docs/latest-v14.x/api/child_process.html#child_process_child_process_execsync_command_options">execSync()</a> で呼び出しています。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-typescript" data-lang="typescript"><span style="color:#a6e22e">execSync</span>(<span style="color:#e6db74">`openssl genrsa 2048 &gt; </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">privatePemPath</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>);
+<span style="color:#a6e22e">execSync</span>(<span style="color:#e6db74">`openssl rsa -pubout &lt; </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">privatePemPath</span><span style="color:#e6db74">}</span><span style="color:#e6db74"> &gt; </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">publicPemPath</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>);
+</code></pre></div><p>また、ヘッダーやペイロードを署名する部分は <a href="https://github.com/auth0/node-jsonwebtoken">jsonwebtoken</a> の <code>sign()</code> を使っています。</p>
+<p>上記記事では JWK で <code>&quot;use&quot;:&quot;sig&quot;</code> を追加する場合などに <code>jq</code> コマンドを使っていますが、実は <a href="https://github.com/dannycoates/pem-jwk">pem-jwk</a> の <a href="https://github.com/dannycoates/pem-jwk/blob/master/index.js#L150">pem2jwk()</a> には、第2引数として <code>extras</code> というのがあります。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">pem2jwk</span>(<span style="color:#a6e22e">pem</span>, <span style="color:#a6e22e">extras</span>) {
+  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">text</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">pem</span>.<span style="color:#a6e22e">toString</span>().<span style="color:#a6e22e">split</span>(<span style="color:#e6db74">/(\r\n|\r|\n)+/g</span>)
+  <span style="color:#a6e22e">text</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">text</span>.<span style="color:#a6e22e">filter</span>(<span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">line</span>) {
+    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">line</span>.<span style="color:#a6e22e">trim</span>().<span style="color:#a6e22e">length</span> <span style="color:#f92672">!==</span> <span style="color:#ae81ff">0</span>
+  });
+  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">decoder</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">getDecoder</span>(<span style="color:#a6e22e">text</span>[<span style="color:#ae81ff">0</span>])
+
+  <span style="color:#a6e22e">text</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">text</span>.<span style="color:#a6e22e">slice</span>(<span style="color:#ae81ff">1</span>, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>).<span style="color:#a6e22e">join</span>(<span style="color:#e6db74">&#39;&#39;</span>)
+  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">decoder</span>(<span style="color:#a6e22e">Buffer</span>.<span style="color:#a6e22e">from</span>(<span style="color:#a6e22e">text</span>.<span style="color:#a6e22e">replace</span>(<span style="color:#e6db74">/[^\w\d\+\/=]+/g</span>, <span style="color:#e6db74">&#39;&#39;</span>), <span style="color:#e6db74">&#39;base64&#39;</span>), <span style="color:#a6e22e">extras</span>)
+}
+</code></pre></div><p>これを辿っていくと&hellip;</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">decodeRsaPublic</span>(<span style="color:#a6e22e">buffer</span>, <span style="color:#a6e22e">extras</span>) {
+  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">key</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">RSAPublicKey</span>.<span style="color:#a6e22e">decode</span>(<span style="color:#a6e22e">buffer</span>, <span style="color:#e6db74">&#39;der&#39;</span>)
+  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">e</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">pad</span>(<span style="color:#a6e22e">key</span>.<span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">toString</span>(<span style="color:#ae81ff">16</span>))
+  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">jwk</span> <span style="color:#f92672">=</span> {
+    <span style="color:#a6e22e">kty</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;RSA&#39;</span>,
+    <span style="color:#a6e22e">n</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">bn2base64url</span>(<span style="color:#a6e22e">key</span>.<span style="color:#a6e22e">n</span>),
+    <span style="color:#a6e22e">e</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">hex2b64url</span>(<span style="color:#a6e22e">e</span>)
+  }
+  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">addExtras</span>(<span style="color:#a6e22e">jwk</span>, <span style="color:#a6e22e">extras</span>)
+}
+</code></pre></div><p>JWK オブジェクトに、引数で指定したプロパティをそのまま追加していることが分かります。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">addExtras</span>(<span style="color:#a6e22e">obj</span>, <span style="color:#a6e22e">extras</span>) {
+  <span style="color:#a6e22e">extras</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">extras</span> <span style="color:#f92672">||</span> {}
+  Object.<span style="color:#a6e22e">keys</span>(<span style="color:#a6e22e">extras</span>).<span style="color:#a6e22e">forEach</span>(
+    <span style="color:#66d9ef">function</span> (<span style="color:#a6e22e">key</span>) {
+      <span style="color:#a6e22e">obj</span>[<span style="color:#a6e22e">key</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">extras</span>[<span style="color:#a6e22e">key</span>]
+    }
+  )
+  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">obj</span>
+}
+</code></pre></div><p>README にも記載されていない <strong>裏機能</strong> ぽいですが、もうほとんど更新されていないライブラリなので今更削除されることも無いだろうと踏んで、ありがたく使わせてもらうことにしました。</p>
+<h1 id="補足">補足</h1>
+<p><a href="https://aminevsky.github.io/blog/posts/20210605/">1週間前</a> にも書きましたが、Cognito の公開鍵は「将来ローテートするように変更するかもしれない」です。</p>
+<ul>
+<li><a href="https://forums.aws.amazon.com/thread.jspa?threadID=241570">AWS Developer Forums: JWT signing key rotation &hellip;</a></li>
+</ul>
+<blockquote>
+<p>Cognito UserPool currently does not rotate keys but this behavior can be changed in future. For example, we may periodically rotate keys or allow a developer to replace the keys. We recommend that you cache each key in jwks uri against kid. Now when you process Id or Access token in your APIs, you should check the kid in JWT header and retrieve the key from cache. When your API sees token with different kid, you should query jwks uri again to check if keys have been changed and update your cache accordingly with new keys.</p>
+</blockquote>
+<p>なので、これを信じるならば、 <code>jwks.json</code> はキャッシュしておいて定期的に取得するように実装するのが安全でしょう。<sup id="fnref:2"><a href="#fn:2" class="footnote-ref" role="doc-noteref">2</a></sup></p>
+<section class="footnotes" role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn:1" role="doc-endnote">
+<p>ところで、Cognito オーソライザーで「アクセストークン」を検証することはできないんですかね？ 試してみたかぎり「ID トークン」でしか検証できない。 <a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:2" role="doc-endnote">
+<p>でも、これって、具体的にはどういう実装にしたらいいんでしょうね？ とくに Lambda@Edge の場合は「関数タイムアウト」が 5 秒（ビューワーリクエスト）といった感じに制約が厳しいので、あまり重たい処理はできないと思います。最近作ったときは Lambda ハンドラーの外にグローバル変数を作って、変数の中にデータが無ければ axios で取得するという超簡易的キャッシュを実装しましたが、あれで良かった自信が全く無いですね&hellip; <a href="#fnref:2" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+</ol>
+</section>
+
+
+</article>
+
+
+<section class="post-nav">
+    <ul>
+        
+        <li>
+            <a href="https://aminevsky.github.io/blog/posts/20210605/"><i class="fa fa-chevron-circle-left"></i> 20210605</a>
+        </li>
+        
+        
+    </ul>
+</section>
+  
+    
+    
+  
+
+
+
+
+
+</main>
+    <footer>
+        <h6> |
+            Rendered by <a href="https://gohugo.io" title="Hugo">Hugo</a> |
+            <a href="https://aminevsky.github.io/blog/index.xml">Subscribe </a></h6>
+    </footer>
+</div>
+<script src="/blog/js/scripts.js"></script>
+
+  
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'G-S0FVLSJCH4', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+</body>
+
+</html>
+

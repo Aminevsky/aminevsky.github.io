@@ -6,10 +6,159 @@
    <description>Recent content on aminevsky.blog</description>
    <generator>Hugo -- gohugo.io</generator>
    <language>ja-jp</language>
-   <lastBuildDate>Sat, 05 Jun 2021 18:15:00 +0900</lastBuildDate>
+   <lastBuildDate>Sun, 13 Jun 2021 17:00:00 +0900</lastBuildDate>
    
        <atom:link href="https://aminevsky.github.io/blog/index.xml" rel="self" type="application/rss+xml" />
    
+   
+     <item>
+       <title>Cognito の JWT をテストするには</title>
+       <link>https://aminevsky.github.io/blog/posts/cognito-jwt-test/</link>
+       <pubDate>Sun, 13 Jun 2021 17:00:00 +0900</pubDate>
+       
+       <guid>https://aminevsky.github.io/blog/posts/cognito-jwt-test/</guid>
+       <description>&lt;h1 id=&#34;要約&#34;&gt;要約&lt;/h1&gt;
+&lt;p&gt;AWS Cognito が提供する &lt;code&gt;jwks.json&lt;/code&gt; を模擬的に再現するプログラムを作りました。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;GitHub
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/Aminevsky/create-jwks&#34;&gt;https://github.com/Aminevsky/create-jwks&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h1 id=&#34;aws-cognito&#34;&gt;AWS Cognito&lt;/h1&gt;
+&lt;p&gt;AWS Cognito にログインすると、3 種類の JWT が返却されます。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;アクセストークン&lt;/li&gt;
+&lt;li&gt;ID トークン&lt;/li&gt;
+&lt;li&gt;リフレッシュトークン&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;ログイン済みかどうかをチェックするためには、まずクライアントから JWT （アクセストークン or ID トークン）を送ってもらいます。例えば、Cookie や Authorization ヘッダーに JWT を入れて送ってもらいます。&lt;/p&gt;
+&lt;p&gt;そして、サーバー側では送られてきた JWT が妥当かどうかを検証します。API Gateway ならば &lt;a href=&#34;https://dev.classmethod.jp/articles/api-gateway-cognito-authorizer/&#34;&gt;Cognito オーソライザー&lt;/a&gt; に検証を任せることができますが、&lt;sup id=&#34;fnref:1&#34;&gt;&lt;a href=&#34;#fn:1&#34; class=&#34;footnote-ref&#34; role=&#34;doc-noteref&#34;&gt;1&lt;/a&gt;&lt;/sup&gt; Lambda@Edge のように自前で検証しなければならない場合も多いでしょう。&lt;/p&gt;
+&lt;p&gt;この記事では、後者のように自前で検証しなければならず、それゆえテストも自前で行われなければならない場合を想定しています。&lt;/p&gt;
+&lt;h2 id=&#34;公開鍵&#34;&gt;公開鍵&lt;/h2&gt;
+&lt;p&gt;Cognito で発行された JWT の妥当性を検証するためには、まず、AWS から各ユーザープールの公開鍵を取得する必要があります。公開鍵は、以下からダウンロードできます。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;https://cognito-idp.{リージョン}.amazonaws.com/{ユーザープールID}/.well-known/jwks.json
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;例えば、AWS の &lt;a href=&#34;https://aws.amazon.com/jp/premiumsupport/knowledge-center/decode-verify-cognito-json-token/&#34;&gt;記事&lt;/a&gt; から引用すると、以下のようになります。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-json&#34; data-lang=&#34;json&#34;&gt;{
+    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;keys&amp;#34;&lt;/span&gt;: [{
+        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;alg&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;RS256&amp;#34;&lt;/span&gt;,
+        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;e&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;AQAB&amp;#34;&lt;/span&gt;,
+        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;kid&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;abcdefghijklmnopqrsexample=&amp;#34;&lt;/span&gt;,
+        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;kty&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;RSA&amp;#34;&lt;/span&gt;,
+        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;n&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;lsjhglskjhgslkjgh43lj5h34lkjh34lkjht3example&amp;#34;&lt;/span&gt;,
+        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;use&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;sig&amp;#34;&lt;/span&gt;
+    }, {
+        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;alg&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;RS256&amp;#34;&lt;/span&gt;,
+        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;e&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;AQAB&amp;#34;&lt;/span&gt;,
+        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;kid&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;fgjhlkhjlkhexample=&amp;#34;&lt;/span&gt;,
+        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;kty&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;RSA&amp;#34;&lt;/span&gt;,
+        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;n&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;sgjhlk6jp98ugp98up34hpexample&amp;#34;&lt;/span&gt;,
+        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;use&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;sig&amp;#34;&lt;/span&gt;
+    }]
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;keys&lt;/code&gt; は配列になっていて、要素が 2 つ格納されています。これは、それぞれ「アクセストークン」と「ID トークン」の公開鍵に対応しています。&lt;/p&gt;
+&lt;p&gt;送られてくる JWT は「アクセストークン」かもしれないですし、「ID トークン」かもしれません。 &lt;code&gt;jwks.json&lt;/code&gt; にある公開鍵のうち、どちらを使うべきかは、JWT のヘッダーにある &lt;code&gt;kid&lt;/code&gt; （キー ID）で判断します。 &lt;code&gt;kid&lt;/code&gt; が一致すれば、それが使うべき公開鍵ということになります。&lt;/p&gt;
+&lt;h2 id=&#34;検証フロー&#34;&gt;検証フロー&lt;/h2&gt;
+&lt;p&gt;以下が、JWT の検証フローです。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;jwks.json&lt;/code&gt; の中の公開鍵をそれぞれ JWK 形式から PEM 形式へ変換する&lt;/li&gt;
+&lt;li&gt;JWT をデコードする&lt;/li&gt;
+&lt;li&gt;ペイロードの &lt;code&gt;iss&lt;/code&gt; （発行者）が &lt;code&gt;https://cognito-idp.{リージョン}.amazonaws.com/{ユーザープールID}&lt;/code&gt; と一致しているかをチェックする&lt;/li&gt;
+&lt;li&gt;ペイロードの &lt;code&gt;token_use&lt;/code&gt; が、「ID トークン」で認証するならば &lt;code&gt;id&lt;/code&gt; に、「アクセストークン」で認証するならば &lt;code&gt;access&lt;/code&gt; になっているかをチェックする&lt;/li&gt;
+&lt;li&gt;ヘッダーの &lt;code&gt;kid&lt;/code&gt; と一致する &lt;code&gt;kid&lt;/code&gt; を持つ公開鍵があるかをチェックする&lt;/li&gt;
+&lt;li&gt;JWT の署名などを検証する&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;詳しくは、&lt;a href=&#34;https://docs.aws.amazon.com/cognito/latest/developerguide/amazon-cognito-user-pools-using-tokens-verifying-a-jwt.html&#34;&gt;公式ドキュメント&lt;/a&gt; や &lt;a href=&#34;https://aws.amazon.com/jp/blogs/networking-and-content-delivery/authorizationedge-how-to-use-lambdaedge-and-json-web-tokens-to-enhance-web-application-security/&#34;&gt;Lambda@Edge のサンプル&lt;/a&gt; を参照してください。&lt;/p&gt;
+&lt;p&gt;どの処理もライブラリを呼び出すだけだったり、簡単な条件分岐を書くだけなのですが、いずれにしても自分でコードを書かなければなりません。&lt;/p&gt;
+&lt;p&gt;そして、コードを書いたらテストをしなければなりません。&lt;/p&gt;
+&lt;h2 id=&#34;テスト&#34;&gt;テスト&lt;/h2&gt;
+&lt;p&gt;テストでは、ペイロードやヘッダーの中身が想定と異なるような JWT を作る必要があります。&lt;/p&gt;
+&lt;p&gt;ところで、Cognito が発行する JWT は、秘密鍵を使って署名されています。当然のことながら、この秘密鍵は AWS の奥底に隠されていて、私たちには窺い知ることができません。&lt;/p&gt;
+&lt;p&gt;JWT の仕様上、ペイロードやヘッダーの中身を変更したら署名し直さなければなりません。しかし、Cognito の秘密鍵は分かりません。&lt;/p&gt;
+&lt;p&gt;そこで、検証フローが正しいかどうかをテストするためには、以下のような作業が必要になります。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;テスト用の秘密鍵と公開鍵を作る&lt;/li&gt;
+&lt;li&gt;ペイロードやヘッダーの中身を変える&lt;/li&gt;
+&lt;li&gt;テスト用の秘密鍵で署名して JWT を作る&lt;/li&gt;
+&lt;li&gt;テスト用の公開鍵で JWT を検証する&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;このプログラムでは、上記の作業のうち、テスト用の秘密鍵と公開鍵を作り、Cognito が提供しているような &lt;code&gt;jwks.json&lt;/code&gt; も作ります。&lt;/p&gt;
+&lt;h1 id=&#34;プログラム解説&#34;&gt;プログラム解説&lt;/h1&gt;
+&lt;h2 id=&#34;概略&#34;&gt;概略&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;yarn run:create&lt;/code&gt; を実行すると、 &lt;code&gt;keys&lt;/code&gt; ディレクトリの下に、以下のファイルを作ります。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;秘密鍵&lt;/li&gt;
+&lt;li&gt;公開鍵（PEM 形式）&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;jwks.json&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;なお、秘密鍵と公開鍵を作るときに OpenSSL を呼び出しているので、Windows では動かないかもしれません。&lt;/p&gt;
+&lt;p&gt;また、おまけとして、 &lt;code&gt;yarn run:example&lt;/code&gt; を実行すると、JWT の作成と検証を行うサンプルも添付しています。&lt;/p&gt;
+&lt;h2 id=&#34;実装メモ&#34;&gt;実装メモ&lt;/h2&gt;
+&lt;p&gt;すでに似たようなことをしている人がいました。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://qiita.com/shu-yusa/items/36855cf1e9b4ec2adf28&#34;&gt;OpenID ConnectのJWTとJWKを手軽につくりたい&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;上記記事ではシェルスクリプトを書いていますが、Node.js で全て実行するようにしました。&lt;/p&gt;
+&lt;p&gt;OpenSSL も Node.js の &lt;a href=&#34;https://nodejs.org/docs/latest-v14.x/api/child_process.html#child_process_child_process_execsync_command_options&#34;&gt;execSync()&lt;/a&gt; で呼び出しています。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-typescript&#34; data-lang=&#34;typescript&#34;&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;execSync&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;`openssl genrsa 2048 &amp;gt; &lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;${&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;privatePemPath&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;}&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;`&lt;/span&gt;);
+&lt;span style=&#34;color:#a6e22e&#34;&gt;execSync&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;`openssl rsa -pubout &amp;lt; &lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;${&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;privatePemPath&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;}&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt; &amp;gt; &lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;${&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;publicPemPath&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;}&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;`&lt;/span&gt;);
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;また、ヘッダーやペイロードを署名する部分は &lt;a href=&#34;https://github.com/auth0/node-jsonwebtoken&#34;&gt;jsonwebtoken&lt;/a&gt; の &lt;code&gt;sign()&lt;/code&gt; を使っています。&lt;/p&gt;
+&lt;p&gt;上記記事では JWK で &lt;code&gt;&amp;quot;use&amp;quot;:&amp;quot;sig&amp;quot;&lt;/code&gt; を追加する場合などに &lt;code&gt;jq&lt;/code&gt; コマンドを使っていますが、実は &lt;a href=&#34;https://github.com/dannycoates/pem-jwk&#34;&gt;pem-jwk&lt;/a&gt; の &lt;a href=&#34;https://github.com/dannycoates/pem-jwk/blob/master/index.js#L150&#34;&gt;pem2jwk()&lt;/a&gt; には、第2引数として &lt;code&gt;extras&lt;/code&gt; というのがあります。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-javascript&#34; data-lang=&#34;javascript&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;function&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;pem2jwk&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;pem&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;extras&lt;/span&gt;) {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;var&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;text&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;pem&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;toString&lt;/span&gt;().&lt;span style=&#34;color:#a6e22e&#34;&gt;split&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;/(\r\n|\r|\n)+/g&lt;/span&gt;)
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;text&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;text&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;filter&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;function&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;line&lt;/span&gt;) {
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;line&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;trim&lt;/span&gt;().&lt;span style=&#34;color:#a6e22e&#34;&gt;length&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;!==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;
+  });
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;var&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;decoder&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;getDecoder&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;text&lt;/span&gt;[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;])
+
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;text&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;text&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;slice&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;).&lt;span style=&#34;color:#a6e22e&#34;&gt;join&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;#39;&lt;/span&gt;)
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;decoder&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;Buffer&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;from&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;text&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;replace&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;/[^\w\d\+\/=]+/g&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;#39;&lt;/span&gt;), &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;base64&amp;#39;&lt;/span&gt;), &lt;span style=&#34;color:#a6e22e&#34;&gt;extras&lt;/span&gt;)
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;これを辿っていくと&amp;hellip;&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-javascript&#34; data-lang=&#34;javascript&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;function&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;decodeRsaPublic&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;buffer&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;extras&lt;/span&gt;) {
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;var&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;key&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;RSAPublicKey&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;decode&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;buffer&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;der&amp;#39;&lt;/span&gt;)
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;var&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;e&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;pad&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;key&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;e&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;toString&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;16&lt;/span&gt;))
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;var&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;jwk&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; {
+    &lt;span style=&#34;color:#a6e22e&#34;&gt;kty&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;RSA&amp;#39;&lt;/span&gt;,
+    &lt;span style=&#34;color:#a6e22e&#34;&gt;n&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;bn2base64url&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;key&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;n&lt;/span&gt;),
+    &lt;span style=&#34;color:#a6e22e&#34;&gt;e&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;hex2b64url&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;e&lt;/span&gt;)
+  }
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;addExtras&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;jwk&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;extras&lt;/span&gt;)
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;JWK オブジェクトに、引数で指定したプロパティをそのまま追加していることが分かります。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-javascript&#34; data-lang=&#34;javascript&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;function&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;addExtras&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;obj&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;extras&lt;/span&gt;) {
+  &lt;span style=&#34;color:#a6e22e&#34;&gt;extras&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;extras&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; {}
+  Object.&lt;span style=&#34;color:#a6e22e&#34;&gt;keys&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;extras&lt;/span&gt;).&lt;span style=&#34;color:#a6e22e&#34;&gt;forEach&lt;/span&gt;(
+    &lt;span style=&#34;color:#66d9ef&#34;&gt;function&lt;/span&gt; (&lt;span style=&#34;color:#a6e22e&#34;&gt;key&lt;/span&gt;) {
+      &lt;span style=&#34;color:#a6e22e&#34;&gt;obj&lt;/span&gt;[&lt;span style=&#34;color:#a6e22e&#34;&gt;key&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;extras&lt;/span&gt;[&lt;span style=&#34;color:#a6e22e&#34;&gt;key&lt;/span&gt;]
+    }
+  )
+  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;obj&lt;/span&gt;
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;README にも記載されていない &lt;strong&gt;裏機能&lt;/strong&gt; ぽいですが、もうほとんど更新されていないライブラリなので今更削除されることも無いだろうと踏んで、ありがたく使わせてもらうことにしました。&lt;/p&gt;
+&lt;h1 id=&#34;補足&#34;&gt;補足&lt;/h1&gt;
+&lt;p&gt;&lt;a href=&#34;https://aminevsky.github.io/blog/posts/20210605/&#34;&gt;1週間前&lt;/a&gt; にも書きましたが、Cognito の公開鍵は「将来ローテートするように変更するかもしれない」です。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://forums.aws.amazon.com/thread.jspa?threadID=241570&#34;&gt;AWS Developer Forums: JWT signing key rotation &amp;hellip;&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Cognito UserPool currently does not rotate keys but this behavior can be changed in future. For example, we may periodically rotate keys or allow a developer to replace the keys. We recommend that you cache each key in jwks uri against kid. Now when you process Id or Access token in your APIs, you should check the kid in JWT header and retrieve the key from cache. When your API sees token with different kid, you should query jwks uri again to check if keys have been changed and update your cache accordingly with new keys.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;なので、これを信じるならば、 &lt;code&gt;jwks.json&lt;/code&gt; はキャッシュしておいて定期的に取得するように実装するのが安全でしょう。&lt;sup id=&#34;fnref:2&#34;&gt;&lt;a href=&#34;#fn:2&#34; class=&#34;footnote-ref&#34; role=&#34;doc-noteref&#34;&gt;2&lt;/a&gt;&lt;/sup&gt;&lt;/p&gt;
+&lt;section class=&#34;footnotes&#34; role=&#34;doc-endnotes&#34;&gt;
+&lt;hr&gt;
+&lt;ol&gt;
+&lt;li id=&#34;fn:1&#34; role=&#34;doc-endnote&#34;&gt;
+&lt;p&gt;ところで、Cognito オーソライザーで「アクセストークン」を検証することはできないんですかね？ 試してみたかぎり「ID トークン」でしか検証できない。 &lt;a href=&#34;#fnref:1&#34; class=&#34;footnote-backref&#34; role=&#34;doc-backlink&#34;&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li id=&#34;fn:2&#34; role=&#34;doc-endnote&#34;&gt;
+&lt;p&gt;でも、これって、具体的にはどういう実装にしたらいいんでしょうね？ とくに Lambda@Edge の場合は「関数タイムアウト」が 5 秒（ビューワーリクエスト）といった感じに制約が厳しいので、あまり重たい処理はできないと思います。最近作ったときは Lambda ハンドラーの外にグローバル変数を作って、変数の中にデータが無ければ axios で取得するという超簡易的キャッシュを実装しましたが、あれで良かった自信が全く無いですね&amp;hellip; &lt;a href=&#34;#fnref:2&#34; class=&#34;footnote-backref&#34; role=&#34;doc-backlink&#34;&gt;&amp;#x21a9;&amp;#xfe0e;&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/section&gt;
+</description>
+     </item>
    
      <item>
        <title>20210605</title>
