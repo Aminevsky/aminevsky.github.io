@@ -17,7 +17,7 @@ googleAnalytics  = "G-S0FVLSJCH4"
     startLevel = 1
 
 [params]
-  customCSS = ["/css/custom.css"]
+  customCSS = ["./css/custom.css"]
 
 [menu]
   [[menu.main]]
