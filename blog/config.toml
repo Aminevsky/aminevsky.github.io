@@ -1,0 +1,41 @@
+baseURL = "https://aminevsky.github.io/blog/"
+languageCode = "ja-jp"
+title = "aminevsky.blog"
+theme = "hugo-kiera"
+hasCJKLanguage = true
+googleAnalytics  = "G-S0FVLSJCH4"
+
+[author]
+  name = "Aminevsky"
+  github = "Aminevsky"
+  twitter = "Aminevsky"
+
+[markup]
+  [markup.tableOfContents]
+    endLevel = 4
+    ordered = false
+    startLevel = 1
+
+[params]
+  customCSS = ["/css/custom.css"]
+
+[menu]
+  [[menu.main]]
+    name = "Posts"
+    url = "posts"
+    weight = 1
+
+  [[menu.main]]
+    name = "Categories"
+    url = "categories"
+    weight = 2
+
+  [[menu.main]]
+    name = "Tags"
+    url = "tags"
+    weight = 3
+
+  [[menu.main]]
+    name = "Home"
+    url = "https://aminevsky.github.io"
+    weight = 100
