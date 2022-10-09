@@ -4,6 +4,7 @@ title = "aminevsky.blog"
 theme = "hugo-kiera"
 hasCJKLanguage = true
 googleAnalytics  = "G-S0FVLSJCH4"
+canonifyurls = true
 
 [author]
   name = "Aminevsky"
