@@ -1,3 +1,12 @@
+body {
+  font-family: "Roboto Slab", sans-serif !important;
+}
+
+#container main {
+  line-height: 1.7;
+  font-size: 1.1rem;
+}
+
 nav#TableOfContents {
   background-color: #edf2f7;
   border: none;
