@@ -1,9 +1,8 @@
 baseURL = "https://aminevsky.github.io/blog/"
 languageCode = "ja-jp"
-title = "aminevsky.blog"
+title = "aminev.blog"
 theme = "hugo-kiera"
 hasCJKLanguage = true
-googleAnalytics  = "G-S0FVLSJCH4"
 
 [author]
   name = "Aminevsky"
@@ -18,6 +17,7 @@ googleAnalytics  = "G-S0FVLSJCH4"
 
 [params]
   customCSS = ["./css/custom.css"]
+  googleTagManagerID = "GTM-M4W5JTH"
 
 [menu]
   [[menu.main]]
