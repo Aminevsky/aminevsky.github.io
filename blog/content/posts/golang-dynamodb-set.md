@@ -1,6 +1,6 @@
 ---
 title: "Go言語でDynamoDBのセット型を扱う"
-date: 2022-10-10T17:05:45+09:00 
+date: 2022-10-15T13:35:00+09:00 
 draft: false
 categories:
 - 開発 
