@@ -7,6 +7,10 @@ body {
   font-size: 1.1rem;
 }
 
+#container main article .highlight pre {
+  font-size: 1em;
+}
+
 nav#TableOfContents {
   background-color: #edf2f7;
   border: none;
